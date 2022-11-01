@@ -14,11 +14,11 @@ let
   dotToUnderscore = s: builtins.replaceStrings [ "." ] [ "_" ] s;
   
   # A small function to embellish the metadata with the kernel and patch urls:
-  addUrlsToMetadata = name: { kernelVersion, patchVersion, kernelHash, patchHash, rtExtraConfig }: { 
-    inherit kernelVersion patchVersion kernelHash patchHash rtExtraConfig; 
+  # TODO: use @args to remove redundancy?
+  addUrlsToMetadata = name: { kernelVersion, patchVersion, ... }@args: { 
     patchUrl = makePatchUrl kernelVersion patchVersion; 
     kernelUrl = makeKernelUrl kernelVersion; 
-  };
+  } // args;
 
   metadata = builtins.mapAttrs addUrlsToMetadata branch_metadata; 
 
@@ -26,30 +26,30 @@ let
   branch_metadata = builtins.listToAttrs 
     (map (x: { name = makeKernelBranch x.kernelVersion; value = x; }) raw_metadata);
 
-  rtExtraConfig4 = ''
-    PREEMPT y
-    PREEMPT_RT_FULL y
-    PREEMPT_VOLUNTARY n
-  '';
+  rtExtraConfig4 = with lib.kernel; {
+    PREEMPT = yes;
+    PREEMPT_RT_FULL = yes;
+    PREEMPT_VOLUNTARY = no;
+  };
 
-  rtExtraConfig5 = ''
-    EXPERT y
-    PREEMPT_RT y
-    PREEMPT_VOLUNTARY n
-  '';
+  rtExtraConfig5 = with lib.kernel; {
+    EXPERT = yes;
+    PREEMPT_RT = yes;
+    PREEMPT_VOLUNTARY = lib.mkForce no;
+  };
 
   # We use the newest RT kernels corresponding to the nixpkgs.linuxPackages for LTS kernels:
-  raw_metadata = [
+  raw_metadata = with lib.kernel; [
     { 
       kernelVersion = "4.9.319"; 
-      kernelHash = "sha256-qCLwlSWuiANFOTmpHnPxgJejuirsc35P6asxSgExcV0="; 
+      kernelHash = "sha256-V6frcqPflkcwCz1yA6KMZ24Q8pn9qJaqnaHMkuwSRIQ="; 
       patchVersion = "rt195"; 
       patchHash = "sha256:0cmp4svgim2yp4g2mbpfmw11dp737q60x9gcq108r7pw3zzdg248"; 
       rtExtraConfig = rtExtraConfig4;
     }
     { 
       kernelVersion = "4.14.296"; 
-      kernelHash = "sha256-qCLwlSWuiANFOTmpHnPxgJejuirsc32P6asxSgExcV0="; 
+      kernelHash = "sha256-LdXNsnPhH3DZs+7bBREqfzTDyaXjcpdwxpNzv/Czm9g="; 
       patchVersion = "rt139"; 
       patchHash = "sha256:03i0z2nhb70jlgqkshhqsb1ksyih538hx2jngl4ci4rqf1qd2q5q"; 
       rtExtraConfig = rtExtraConfig4;
@@ -63,17 +63,18 @@ let
     }
     { 
       kernelVersion = "5.4.209"; 
-      kernelHash = "sha256-qCLwlSWuiANFOTmpHnPxgJejuirsc75P3asxSgExcV0="; 
+      kernelHash = "sha256-DoeRe8clqeO1TGdRuRnxLzILjVtQdYW7+lf/M1P6ts0="; 
       patchVersion = "rt77"; 
       patchHash = "sha256:120k5yjy9xj84mdz2h258ghjm6z4zaxn8dh8wz2631slvjv27w1k"; 
       rtExtraConfig = rtExtraConfig5;
     } 
     { 
       kernelVersion = "5.10.152"; 
-      kernelHash = "sha256-qCLwlSWuiANFOTmpHnPxgJejuirsc73P6asxSgExcV0="; 
+      kernelHash = "sha256-+gtcg6Tr/anwpSzGk2RutsJNut5sN+4tGLZu4t8V2KY="; 
       patchVersion = "rt75"; 
       patchHash = "sha256:0kbza7wwsvak8bv7l9hfzi0nsb31486p2khxj895vxvm8lrjd13w"; 
-      rtExtraConfig = rtExtraConfig5;
+      extraConfig = rtExtraConfig5 // (with lib.kernel; { RT_GROUP_SCHED = lib.mkForce (option no); });
+ 
     } 
     { 
       kernelVersion = "5.15.73"; 
@@ -124,6 +125,9 @@ in
   config = 
     let 
       kernelData = metadata."${rtnix.kernel.version}";
+    ooption = x:
+      x // { optional = true; };
+
     in
       {
         boot.kernelPatches = [ 
@@ -134,7 +138,7 @@ in
               sha256 = kernelData.patchHash;
             };
 
-            extraConfig = kernelData.rtExtraConfig;
+            # extraConfig = kernelData.rtExtraConfig;
           })
 
           (lib.mkIf (rtnix.enable && rtnix.kernel.timerlat) {
@@ -159,6 +163,9 @@ in
                 };
                 version = kernelData.kernelVersion;
                 modDirVersion = kernelData.kernelVersion + "-" + kernelData.patchVersion;
+                structuredExtraConfig = kernelData.extraConfig;
+                # structuredExtraConfig = with lib.kernel; { RT_GROUP_SCHED = lib.mkForce (ooption no); };
+                # ignoreConfigErrors = true;
               };
             }));
       };

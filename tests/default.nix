@@ -4,7 +4,8 @@ let
   makeTest = import ./maketest.nix;
 in
 lib.crossLists 
-  (enableRtnix: kernelVersion: enableRealtime: enableTimerlat: makeTest { inherit enableRtnix kernelVersion enableRealtime enableTimerlat; }) 
+  (enableRtnix: kernelVersion: enableRealtime: enableTimerlat: 
+    makeTest { inherit enableRtnix kernelVersion enableRealtime enableTimerlat; }) 
  
   # The combinations we test (gets expanded by lib.crossLists above):
   [ 
