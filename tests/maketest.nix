@@ -2,7 +2,7 @@
 #
 # nix-build tests/maketest.nix --argstr kernelVersion 6.0 --arg enableRtnix true --arg enableRealtime true --arg enableTimerlat true
 
-{ enableRtnix, kernelVersion, enableRealtime, enableTimerlat }:
+{ kernelVersion, enableRealtime, enableTimerlat }:
 let 
   pkgs = import <nixpkgs> {};
   lib = pkgs.lib;
@@ -14,7 +14,7 @@ in
       { config, pkgs, ... }:
       { imports = [ ../default.nix ];
 
-        rtnix.enable = enableRtnix;
+        rtnix.enable = true;
         rtnix.kernel.version = kernelVersion;
         rtnix.kernel.realtime = enableRealtime;
         rtnix.kernel.timerlat = enableTimerlat;

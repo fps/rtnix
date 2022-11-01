@@ -3,21 +3,19 @@ let
   lib = pkgs.lib;
   makeTest = import ./maketest.nix;
 in
-lib.crossLists 
-  (enableRtnix: kernelVersion: enableRealtime: enableTimerlat: 
-    makeTest { inherit enableRtnix kernelVersion enableRealtime enableTimerlat; }) 
+builtins.map 
+  (with lib; options: 
+    makeTest { kernelVersion = (elemAt options 0); enableRealtime = (elemAt options 1); enableTimerlat = (elemAt options 2); }) 
  
-  # The combinations we test (gets expanded by lib.crossLists above):
-  [ 
-    # rtnix.enable:
-    [ true ] 
-
-    # rtnix.kernel.version:
-    [ "4.9" "4.14" "4.19" "5.4" "5.10" "5.15" "5.19" "6.0" ] 
-
-    # rtnix.kernel.realtime: 
-    [ true ] 
-
-    # rtnix.kernel.timerlat:
-    [ true false ] 
-  ]
+    #version realtime timerlat
+    [ 
+      [ "4.9"   true  false ] 
+      [ "4.14"  true  false ]
+      [ "4.19"  true  false ]
+      [ "5.4"   true  false ]
+      [ "5.10"  true  false ]
+      [ "5.15"  true  false ]
+      [ "5.19"  true  false ]
+      [ "6.0"   true  false ]
+      [ "6.0"   true  true  ]
+    ] 

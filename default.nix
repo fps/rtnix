@@ -27,10 +27,11 @@ let
     (map (x: { name = makeKernelBranch x.kernelVersion; value = x; }) raw_metadata);
 
   rtExtraConfig4 = with lib.kernel; {
-    PREEMPT = yes;
+    PREEMPT = lib.mkForce yes;
     PREEMPT_RT_FULL = yes;
-    PREEMPT_VOLUNTARY = no;
-  };
+    PREEMPT_VOLUNTARY = lib.mkForce no;
+    RT_GROUP_SCHED = lib.mkForce (option no)
+  ;};
 
   rtExtraConfig5 = with lib.kernel; {
     EXPERT = yes;
@@ -45,28 +46,28 @@ let
       kernelHash = "sha256-V6frcqPflkcwCz1yA6KMZ24Q8pn9qJaqnaHMkuwSRIQ="; 
       patchVersion = "rt195"; 
       patchHash = "sha256:0cmp4svgim2yp4g2mbpfmw11dp737q60x9gcq108r7pw3zzdg248"; 
-      rtExtraConfig = rtExtraConfig4;
+      extraConfig = rtExtraConfig4;
     }
     { 
       kernelVersion = "4.14.296"; 
       kernelHash = "sha256-LdXNsnPhH3DZs+7bBREqfzTDyaXjcpdwxpNzv/Czm9g="; 
       patchVersion = "rt139"; 
       patchHash = "sha256:03i0z2nhb70jlgqkshhqsb1ksyih538hx2jngl4ci4rqf1qd2q5q"; 
-      rtExtraConfig = rtExtraConfig4;
+      extraConfig = rtExtraConfig4;
     }
     { 
       kernelVersion = "4.19.255"; 
-      kernelHash = "sha256:0aq34azpjgfawswipk6ji3a4ynl447gqgwdxx7rpxjyzcva7vsh2"; 
+      kernelHash = "sha256-dzmSBj9MCVYmCv3ZRsdt3/772cJS6AC+YJRWlsAbikM="; 
       patchVersion = "rt113"; 
       patchHash = "sha256:0aq34azpjgfawswipk6ji3a4ynl447gqgwdxx7rpxjyzcva7vsh6"; 
-      rtExtraConfig = rtExtraConfig4;
+      extraConfig = rtExtraConfig4 // (with lib.kernel; { XEN_TMEM = lib.mkForce module; });
     }
     { 
       kernelVersion = "5.4.209"; 
       kernelHash = "sha256-DoeRe8clqeO1TGdRuRnxLzILjVtQdYW7+lf/M1P6ts0="; 
       patchVersion = "rt77"; 
       patchHash = "sha256:120k5yjy9xj84mdz2h258ghjm6z4zaxn8dh8wz2631slvjv27w1k"; 
-      rtExtraConfig = rtExtraConfig5;
+      extraConfig = rtExtraConfig5;
     } 
     { 
       kernelVersion = "5.10.152"; 
@@ -81,21 +82,21 @@ let
       kernelHash = "sha256-qCLwlSWuiANFOTmpHnPxgJejuirsc75P6asxSgExcV0="; 
       patchVersion = "rt52"; 
       patchHash = "sha256:0jn6rlhl3gj0qfq1b8jz9yjg0lmrygv2n8kg1ck4hp3al8ps141w"; 
-      rtExtraConfig = rtExtraConfig5;
+      extraConfig = rtExtraConfig5;
     } 
     { 
       kernelVersion = "5.19"; 
-      kernelHash = "sha256-qCLwlSWuiANFOTmpHnPxgJejuirsc72P6asxSgExcV0="; 
+      kernelHash = "sha256-/yQMV5ue4a/8MYkX3gc5T8HDu0nawl7BKHNwwuFQBag="; 
       patchVersion = "rt10"; 
       patchHash = "sha256:18i5iyig8smb561gb54b1s8xmky2q134smpwci24f4cj6lljcdir"; 
-      rtExtraConfig = rtExtraConfig5;
+      extraConfig = rtExtraConfig5;
     } 
     {
       kernelVersion = "6.0.5";
       kernelHash = "sha256-YTMu8itTxQwQ+qv7lliWp9GtTzOB8PiWQ8gg8opgQY4=";
       patchVersion = "rt14";
       patchHash = "sha256:01nmzddbg5qm52943xksn8pl2jwh9400x9831apgrl8mv4a4lfm5";
-      rtExtraConfig = rtExtraConfig5;
+      extraConfig = rtExtraConfig5;
     }
   ];
 in
@@ -125,9 +126,6 @@ in
   config = 
     let 
       kernelData = metadata."${rtnix.kernel.version}";
-    ooption = x:
-      x // { optional = true; };
-
     in
       {
         boot.kernelPatches = [ 
@@ -164,8 +162,6 @@ in
                 version = kernelData.kernelVersion;
                 modDirVersion = kernelData.kernelVersion + "-" + kernelData.patchVersion;
                 structuredExtraConfig = kernelData.extraConfig;
-                # structuredExtraConfig = with lib.kernel; { RT_GROUP_SCHED = lib.mkForce (ooption no); };
-                # ignoreConfigErrors = true;
               };
             }));
       };
