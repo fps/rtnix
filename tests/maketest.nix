@@ -27,7 +27,7 @@ in
     + (lib.optionalString enableRealtime ''
       result = machine.succeed("uname -v")
       print(result)
-      if not "PREEMPT RT" or not "PREEMPT_RT" in result:
+      if not "PREEMPT RT" and not "PREEMPT_RT" in result:
           raise Exception("Realtime not enabled")
     '')
     + (lib.optionalString enableTimerlat ''
