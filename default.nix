@@ -14,10 +14,10 @@ let
   dotToUnderscore = s: builtins.replaceStrings [ "." ] [ "_" ] s;
   
   # A small function to embellish the metadata with the kernel and patch urls:
-  # TODO: use @args to remove redundancy?
-  addUrlsToMetadata = name: { kernelVersion, patchVersion, ... }@args: { 
+  addUrlsToMetadata = name: { kernelVersion, patchVersion, kernelModDirVersion ? kernelVersion + "-" + patchVersion, ... }@args: { 
     patchUrl = makePatchUrl kernelVersion patchVersion; 
     kernelUrl = makeKernelUrl kernelVersion; 
+    inherit kernelModDirVersion;
   } // args;
 
   metadata = builtins.mapAttrs addUrlsToMetadata branch_metadata; 
@@ -67,7 +67,7 @@ let
       kernelHash = "sha256-DoeRe8clqeO1TGdRuRnxLzILjVtQdYW7+lf/M1P6ts0="; 
       patchVersion = "rt77"; 
       patchHash = "sha256:120k5yjy9xj84mdz2h258ghjm6z4zaxn8dh8wz2631slvjv27w1k"; 
-      extraConfig = rtExtraConfig5;
+      extraConfig = rtExtraConfig5 // (with lib.kernel; { RT_GROUP_SCHED = lib.mkForce (option no); });
     } 
     { 
       kernelVersion = "5.10.152"; 
@@ -84,8 +84,9 @@ let
       patchHash = "sha256:0jn6rlhl3gj0qfq1b8jz9yjg0lmrygv2n8kg1ck4hp3al8ps141w"; 
       extraConfig = rtExtraConfig5;
     } 
-    { 
+    rec { 
       kernelVersion = "5.19"; 
+      kernelModDirVersion = "5.19.0-" + patchVersion;
       kernelHash = "sha256-/yQMV5ue4a/8MYkX3gc5T8HDu0nawl7BKHNwwuFQBag="; 
       patchVersion = "rt10"; 
       patchHash = "sha256:18i5iyig8smb561gb54b1s8xmky2q134smpwci24f4cj6lljcdir"; 
@@ -160,7 +161,7 @@ in
                   sha256 = kernelData.kernelHash;
                 };
                 version = kernelData.kernelVersion;
-                modDirVersion = kernelData.kernelVersion + "-" + kernelData.patchVersion;
+                modDirVersion = kernelData.kernelModDirVersion;
                 structuredExtraConfig = kernelData.extraConfig;
               };
             }));
