@@ -3,28 +3,44 @@ let
   rtnix = config.rtnix;
 
   # Some utility functions to extract infos from a kernel version string:
-  makeKernelMajorVersion = kernelVersion: lib.head (lib.splitString "." kernelVersion);
-  makeKernelBranch = kernelVersion: lib.concatStringsSep "." (lib.take 2 (lib.splitString "." kernelVersion));
+  makeKernelMajorVersion = 
+    kernelVersion: 
+      lib.head (lib.splitString "." kernelVersion);
+
+  makeKernelBranch = 
+    kernelVersion: 
+      lib.concatStringsSep "." (lib.take 2 (lib.splitString "." kernelVersion));
 
   # Some utility functions to create URLs for kernel and patch versions;
-  makeKernelUrl = kernelVersion: "mirror://kernel/linux/kernel/v${makeKernelMajorVersion kernelVersion}.x/linux-${kernelVersion}.tar.xz";
-  makePatchUrl = kernelVersion: patchVersion: "https://cdn.kernel.org/pub/linux/kernel/projects/rt/${makeKernelBranch kernelVersion}/older/patch-${kernelVersion}-${patchVersion}.patch.gz";
+  makeKernelUrl = 
+    kernelVersion: 
+      "mirror://kernel/linux/kernel/v${makeKernelMajorVersion kernelVersion}.x/linux-${kernelVersion}.tar.xz";
+
+  makePatchUrl = 
+    kernelVersion: patchVersion: 
+      "https://cdn.kernel.org/pub/linux/kernel/projects/rt/${makeKernelBranch kernelVersion}/older/patch-${kernelVersion}-${patchVersion}.patch.gz";
 
   # This function is used to translate a string like linux_6.0 to linux_6_0 in the package overrides:
-  dotToUnderscore = s: builtins.replaceStrings [ "." ] [ "_" ] s;
+  dotToUnderscore = 
+    s: 
+      builtins.replaceStrings [ "." ] [ "_" ] s;
   
   # A small function to embellish the metadata with the kernel and patch urls:
-  addUrlsToMetadata = name: { kernelVersion, patchVersion, kernelModDirVersion ? kernelVersion + "-" + patchVersion, ... }@args: { 
-    patchUrl = makePatchUrl kernelVersion patchVersion; 
-    kernelUrl = makeKernelUrl kernelVersion; 
-    inherit kernelModDirVersion;
-  } // args;
+  addUrlsToMetadata = 
+    name: { kernelVersion, patchVersion, kernelModDirVersion ? kernelVersion + "-" + patchVersion, ... }@args: 
+    { 
+      patchUrl = makePatchUrl kernelVersion patchVersion; 
+      kernelUrl = makeKernelUrl kernelVersion; 
+      inherit kernelModDirVersion;
+    } // args;
 
-  metadata = builtins.mapAttrs addUrlsToMetadata branch_metadata; 
+  metadata = 
+    builtins.mapAttrs addUrlsToMetadata branch_metadata; 
 
   # The metadata as attribute set using the branch as attribute names:
-  branch_metadata = builtins.listToAttrs 
-    (map (x: { name = makeKernelBranch x.kernelVersion; value = x; }) raw_metadata);
+  branch_metadata = 
+    builtins.listToAttrs 
+      (map (x: { name = makeKernelBranch x.kernelVersion; value = x; }) raw_metadata);
 
   rtExtraConfig4 = with lib.kernel; {
     PREEMPT = lib.mkForce yes;
