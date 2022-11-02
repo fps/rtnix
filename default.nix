@@ -8,7 +8,7 @@ let
 
   # Some utility functions to create URLs for kernel and patch versions;
   makeKernelUrl = kernelVersion: "mirror://kernel/linux/kernel/v${makeKernelMajorVersion kernelVersion}.x/linux-${kernelVersion}.tar.xz";
-  makePatchUrl = kernelVersion: patchVersion: "https://cdn.kernel.org/pub/linux/kernel/projects/rt/${makeKernelBranch kernelVersion}/patch-${kernelVersion}-${patchVersion}.patch.gz";
+  makePatchUrl = kernelVersion: patchVersion: "https://cdn.kernel.org/pub/linux/kernel/projects/rt/${makeKernelBranch kernelVersion}/older/patch-${kernelVersion}-${patchVersion}.patch.gz";
 
   # This function is used to translate a string like linux_6.0 to linux_6_0 in the package overrides:
   dotToUnderscore = s: builtins.replaceStrings [ "." ] [ "_" ] s;
