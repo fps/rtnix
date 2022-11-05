@@ -15,7 +15,6 @@ builtins.map
       [ "5.4"   true  false ]
       [ "5.10"  true  false ]
       [ "5.15"  true  false ]
-      [ "5.19"  true  false ]
       [ "6.0"   true  false ]
       [ "6.0"   true  true  ]
     ] 
