@@ -91,7 +91,6 @@ let
       patchVersion = "rt76"; 
       patchHash = "sha256:008vz9ix8vprfysywwan6q6fpb1m1lwliaqa18h5hn8vkm5fwafi"; 
       extraConfig = rtExtraConfig5 // (with lib.kernel; { RT_GROUP_SCHED = lib.mkForce (option no); });
- 
     } 
     { 
       kernelVersion = "5.15.73"; 
