@@ -37,10 +37,14 @@ let
   metadata = 
     builtins.mapAttrs addUrlsToMetadata branch_metadata; 
 
+  addKernelPackageVersion =
+    { kernelVersion, kernelPackageVersion ? makeKernelBranch kernelVersion, ...}@args:
+      { inherit kernelVersion kernelPackageVersion; } // args;
+
   # The metadata as attribute set using the branch as attribute names:
   branch_metadata = 
     builtins.listToAttrs 
-      (map (x: { name = makeKernelBranch x.kernelVersion; value = x; }) raw_metadata);
+      (map (x: { name = makeKernelBranch x.kernelVersion; value = (addKernelPackageVersion x); }) raw_metadata);
 
   rtExtraConfig4 = with lib.kernel; {
     PREEMPT = lib.mkForce yes;
@@ -100,7 +104,8 @@ let
       extraConfig = rtExtraConfig5;
     } 
     {
-      kernelVersion = "6.0.5";
+      kernelVersion = "6.0.5" ;
+      kernelPackageVersion = "6.1";
       kernelHash = "sha256-YTMu8itTxQwQ+qv7lliWp9GtTzOB8PiWQ8gg8opgQY4=";
       patchVersion = "rt14";
       patchHash = "sha256:01nmzddbg5qm52943xksn8pl2jwh9400x9831apgrl8mv4a4lfm5";
@@ -168,7 +173,7 @@ in
         boot.kernelPackages = 
           lib.mkIf (rtnix.enable && (rtnix.kernel.realtime || rtnix.kernel.timerlat))
             # We use the linuxPackage from nixpkgs that shares the kernel version:
-            (pkgs.linuxPackagesFor (pkgs."linux_${dotToUnderscore rtnix.kernel.version}".override {
+            (pkgs.linuxPackagesFor (pkgs."linux_${dotToUnderscore kernelData.kernelPackageVersion}".override {
               argsOverride = rec {
                 src = pkgs.fetchurl {
                   url = kernelData.kernelUrl;
