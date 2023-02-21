@@ -8,6 +8,7 @@ Check this repository out relative to your `configuration.nix`, add `./rtnix` to
 
 ```
 rtnix.enable = true;
+rtnix.kernel.realtime = true;
 rtnix.tuningProcesses = [ "irq/.*xhci" "irq/.*snd_intel_hda" ];
 ```
 
