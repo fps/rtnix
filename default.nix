@@ -104,11 +104,10 @@ let
       extraConfig = rtExtraConfig5;
     } 
     {
-      kernelVersion = "6.0.5" ;
-      kernelPackageVersion = "6.1";
-      kernelHash = "sha256-YTMu8itTxQwQ+qv7lliWp9GtTzOB8PiWQ8gg8opgQY4=";
-      patchVersion = "rt14";
-      patchHash = "sha256:01nmzddbg5qm52943xksn8pl2jwh9400x9831apgrl8mv4a4lfm5";
+      kernelVersion = "6.1.12" ;
+      kernelHash = "sha256-1HqmdRcJBNzJPuqnyW21TUdqEcXT6M89O5bjZOKg7eo=";
+      patchVersion = "rt7";
+      patchHash = "sha256:04891kk9w909zm9p8fhxxrwhs0d630m20slc0iasrb85albd6wpn";
       extraConfig = rtExtraConfig5;
     }
   ];
@@ -132,7 +131,7 @@ in
 
     kernel.version = lib.mkOption {
       type = lib.types.str;
-      default = "6.0";
+      default = "6.1";
     };
 
     tuningMaxPriority = lib.mkOption {
