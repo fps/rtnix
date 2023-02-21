@@ -134,6 +134,17 @@ in
       type = lib.types.str;
       default = "6.0";
     };
+
+    tuningMaxPriority = lib.mkOption {
+      type = lib.types.int;
+      default = 90;
+    };
+
+    tuningProcesses = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      description = lib.mdDoc "A list of regex strings passed to pgrep to determine the PIDs of processes that are set to SCHED_FIFO with priorities tuningMaxPriority, tuningMaxPriority - 1, ...";
+      default = [ ];
+    };
   }; 
 
   config = 
@@ -184,5 +195,16 @@ in
                 structuredExtraConfig = kernelData.extraConfig;
               };
             }));
+
+        systemd.services.irq_tuning = {
+          enable = true;
+          description = "Tune irq priorities";
+          wantedBy = [ "basic.target" ];
+          serviceConfig = {
+            Type = "oneshot";
+            ExecStart = builtins.map (x: "${pkgs.bash}/bin/bash -c 'for pid in $(${pkgs.procps}/bin/pgrep \'" + x + "\'); do ${pkgs.util-linux}/bin/chrt --pid -f " + (builtins.toString rtnix.tuningMaxPriority) + " $pid; done'") rtnix.tuningProcesses;
+            User = "root";
+          };
+        };
       };
 }
