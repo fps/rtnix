@@ -202,7 +202,7 @@ in
           wantedBy = [ "basic.target" ];
           serviceConfig = {
             Type = "oneshot";
-            ExecStart = builtins.map (x: "${pkgs.bash}/bin/bash -c 'for pid in $(${pkgs.procps}/bin/pgrep \'" + x + "\'); do ${pkgs.util-linux}/bin/chrt --pid -f " + (builtins.toString rtnix.tuningMaxPriority) + " $pid; done'") rtnix.tuningProcesses;
+            ExecStart = lib.imap0 (i: x: "${pkgs.bash}/bin/bash -c 'for pid in $(${pkgs.procps}/bin/pgrep \'" + x + "\'); do ${pkgs.util-linux}/bin/chrt --pid -f " + (builtins.toString (rtnix.tuningMaxPriority - i)) + " $pid; done'") rtnix.tuningProcesses;
             User = "root";
           };
         };
