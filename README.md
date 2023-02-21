@@ -15,6 +15,6 @@ This should accomplish:
 
 1. Rebuild your kernel with `PREEMPT_RT` enabled
 2. Setup the processes matching the pattern `"irq/.*xhci"` to have `SCHED_FIFO` at priority 90
-3. Setup the processes matching the patterh `"urq/.*snd_intel_hda"` to have `SCHED_FIFO` at priority 89
+3. Setup the processes matching the patterh `"irq/.*snd_intel_hda"` to have `SCHED_FIFO` at priority 89
 
 
