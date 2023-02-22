@@ -144,6 +144,11 @@ in
       description = lib.mdDoc "A list of regex strings passed to pgrep to determine the PIDs of processes that are set to SCHED_FIFO with priorities tuningMaxPriority, tuningMaxPriority - 1, ...";
       default = [ ];
     };
+
+    powerManagementTuning = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+    };
   }; 
 
   config = 
@@ -205,5 +210,20 @@ in
             User = "root";
           };
         };
+
+        systemd.services.powerManagementTuning = lib.mkIf rtnix.powerManagementTuning
+          (let powerTuning = pkgs.writeShellScript "powerTuning.sh" ''
+            ${pkgs.findutils}/bin/find /sys/devices/ -maxdepth 5 -path '*/pci*/power/control' -exec ${pkgs.bash}/bin/bash -c "echo tuning {}; echo on > {};" \;
+          ''; in
+          {
+            enable = true;
+            description = "Power management tuning in sysfs";
+            wantedBy = [ "basic.target" ];
+            serviceConfig = {
+              Type = "exec";
+              ExecStart = "${powerTuning}";
+              User = "root";
+            };
+          });
       };
 }
