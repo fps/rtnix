@@ -1,7 +1,5 @@
 Take a look at the [source](default.nix)
 
-And also at the [tests](tests/default.nix)
-
 # Example usage
 
 Check this repository out relative to your `configuration.nix`, add `./rtnix` to your `imports` and then add some configuration to your `configuration.nix`. For example:
