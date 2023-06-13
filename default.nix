@@ -33,6 +33,8 @@ let
   }; 
 
   config =  {
+    users.groups.realtime = {};
+
     security.pam.loginLimits = [
       { domain = "@realtime"; item = "memlock"; type = "-"   ; value = "unlimited"; }
       { domain = "@realtime"; item = "rtprio" ; type = "-"   ; value = "99"       ; }
