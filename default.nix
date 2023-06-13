@@ -42,6 +42,8 @@ let
       { domain = "@realtime"; item = "nofile" ; type = "hard"; value = "99999"    ; }
     ];
 
+    boot.kernelPackages = lib.mkIf rtnix.kernel.realtime pkgs.linuxPackages-rt_latest;
+
     systemd.services.irq_tuning = {
       enable = true;
       description = "Tune irq priorities";
