@@ -34,10 +34,10 @@ let
 
   config =  {
     security.pam.loginLimits = [
-      { domain = "@audio"; item = "memlock"; type = "-"   ; value = "unlimited"; }
-      { domain = "@audio"; item = "rtprio" ; type = "-"   ; value = "99"       ; }
-      { domain = "@audio"; item = "nofile" ; type = "soft"; value = "99999"    ; }
-      { domain = "@audio"; item = "nofile" ; type = "hard"; value = "99999"    ; }
+      { domain = "@realtime"; item = "memlock"; type = "-"   ; value = "unlimited"; }
+      { domain = "@realtime"; item = "rtprio" ; type = "-"   ; value = "99"       ; }
+      { domain = "@realtime"; item = "nofile" ; type = "soft"; value = "99999"    ; }
+      { domain = "@realtime"; item = "nofile" ; type = "hard"; value = "99999"    ; }
     ];
 
     systemd.services.irq_tuning = {
