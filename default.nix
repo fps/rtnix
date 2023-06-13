@@ -51,6 +51,10 @@ let
       };
     };
 
+    environment.systemPackages = with pkgs; [ 
+      rt-tests
+    ];
+
     systemd.services.powerManagementTuning = lib.mkIf rtnix.powerManagementTuning
       (let powerTuning = pkgs.writeShellScript "powerTuning.sh" ''
         ${pkgs.findutils}/bin/find /sys/devices/ -maxdepth 5 -path '*/pci*/power/control' -exec ${pkgs.bash}/bin/bash -c "echo tuning {}; echo on > {};" \;
