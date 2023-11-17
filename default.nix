@@ -137,7 +137,7 @@ in
       kernelData = metadata."${rtnix.kernel.version}";
     in
       {
-        security.pam.loginLimits = [
+        security.pam.loginLimits = lib.mkIf rtnix.enable [
           { domain = "@audio"; item = "memlock"; type = "-"   ; value = "unlimited"; }
           { domain = "@audio"; item = "rtprio" ; type = "-"   ; value = "99"       ; }
           { domain = "@audio"; item = "nofile" ; type = "soft"; value = "99999"    ; }
