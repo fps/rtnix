@@ -10,7 +10,7 @@ let
       default = false;
     };
 
-    kernel.realtime = lib.mkOption {
+    kernel.realtime.enable = lib.mkOption {
       type = lib.types.bool;
       default = false;
     };
@@ -42,11 +42,11 @@ let
       { domain = "@realtime"; item = "nofile" ; type = "hard"; value = "99999"    ; }
     ];
 
-    boot.kernelPackages = lib.mkIf rtnix.kernel.realtime pkgs.linuxPackages-rt_latest;
+    boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages-rt_latest;
 
-    systemd.services.irq_tuning = {
+    systemd.services.processPriorityTuning = {
       enable = true;
-      description = "Tune irq priorities";
+      description = "Tune process priorities";
       wantedBy = [ "basic.target" ];
       serviceConfig = {
         Type = "oneshot";
