@@ -44,6 +44,8 @@ let
 
     boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages-rt_latest;
 
+    powerManagement.cpuFreqGovernor = lib.mkIf rtnix.enable "performance";
+
     systemd.services.processPriorityTuning = {
       enable = true;
       description = "Tune process priorities";
