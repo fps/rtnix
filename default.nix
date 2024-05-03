@@ -5,11 +5,6 @@ let
   in
 {
   options.rtnix = {
-    enable = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-    };
-
     kernel.realtime.enable = lib.mkOption {
       type = lib.types.bool;
       default = false;
@@ -43,11 +38,6 @@ let
     ];
 
     boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages-rt_latest;
-    # boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages_rt_5_15;
-    # boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages_rt_5_10;
-    # boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages-rt;
-
-    # powerManagement.cpuFreqGovernor = lib.mkIf rtnix.enable "performance";
 
     services.udev.extraRules = ''
       SUBSYSTEM=="sound", ACTION=="change", TAG+="systemd", ENV{SYSTEMD_WANTS}+="processPriorityTuning.service"
@@ -64,18 +54,6 @@ let
         User = "root";
       };
     };
-
-#    systemd.timers.processPriorityTuning = {
-#      enable = true;
-#      description = "Tune process priorities";
-#      wantedBy = [ "basic.target" ];
-#      after = [ "basic.target" ];
-#      timerConfig = {
-#        OnActiveSec = 1;
-#        OnUnitActiveSec = 1;
-#      };
-#    };
-        
 
     environment.systemPackages = with pkgs; [ 
       rt-tests
