@@ -43,20 +43,39 @@ let
     ];
 
     boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages-rt_latest;
+    # boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages_rt_5_15;
+    # boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages_rt_5_10;
+    # boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages-rt;
 
     # powerManagement.cpuFreqGovernor = lib.mkIf rtnix.enable "performance";
+
+    services.udev.extraRules = ''
+      SUBSYSTEM=="sound", ACTION=="change", TAG+="systemd", ENV{SYSTEMD_WANTS}+="processPriorityTuning.service"
+    '';
 
     systemd.services.processPriorityTuning = {
       enable = true;
       description = "Tune process priorities";
-      wantedBy = [ "sound.target" ];
-      after = [ "sound.target" ];
+      wantedBy = [ "basic.target" ];
+      after = [ "basic.target" ];
       serviceConfig = {
         Type = "oneshot";
         ExecStart = lib.imap0 (i: x: "${pkgs.bash}/bin/bash -c 'for pid in $(${pkgs.procps}/bin/pgrep \'" + x + "\'); do echo Tuning: \'" + x + "\' \"with pid(s): $pid\"...; ${pkgs.util-linux}/bin/chrt --pid -f " + (builtins.toString (rtnix.tuningMaxPriority - i)) + " $pid; done'") rtnix.tuningProcesses;
         User = "root";
       };
     };
+
+#    systemd.timers.processPriorityTuning = {
+#      enable = true;
+#      description = "Tune process priorities";
+#      wantedBy = [ "basic.target" ];
+#      after = [ "basic.target" ];
+#      timerConfig = {
+#        OnActiveSec = 1;
+#        OnUnitActiveSec = 1;
+#      };
+#    };
+        
 
     environment.systemPackages = with pkgs; [ 
       rt-tests
