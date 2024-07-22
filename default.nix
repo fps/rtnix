@@ -1,6 +1,7 @@
 { config, lib, pkgs, ... }:
 let 
   rtnix = config.rtnix;
+  pkgs_master = import /home/fps/src/nix/master/nixpkgs {};
 
   in
 {
@@ -13,6 +14,11 @@ let
     tuningMaxPriority = lib.mkOption {
       type = lib.types.int;
       default = 90;
+    };
+
+    disableCStates = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
     };
 
     tuningProcesses = lib.mkOption {
@@ -37,7 +43,9 @@ let
       { domain = "@realtime"; item = "nofile" ; type = "hard"; value = "99999"    ; }
     ];
 
-    boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages-rt_latest;
+    boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs_master.linuxPackages-rt_latest;
+
+    boot.kernelParams = lib.mkIf rtnix.disableCStates [ "processor.max_cstate=1" "idle=poll" ];
 
     services.udev.extraRules = ''
       SUBSYSTEM=="sound", ACTION=="change", TAG+="systemd", ENV{SYSTEMD_WANTS}+="processPriorityTuning.service"
@@ -46,8 +54,8 @@ let
     systemd.services.processPriorityTuning = {
       enable = true;
       description = "Tune process priorities";
-      wantedBy = [ "basic.target" ];
-      after = [ "basic.target" ];
+      # wantedBy = [ "-.mount" ];
+      # after = [ "-.mount" ];
       serviceConfig = {
         Type = "oneshot";
         ExecStart = lib.imap0 (i: x: "${pkgs.bash}/bin/bash -c 'for pid in $(${pkgs.procps}/bin/pgrep \'" + x + "\'); do echo Tuning: \'" + x + "\' \"with pid(s): $pid\"...; ${pkgs.util-linux}/bin/chrt --pid -f " + (builtins.toString (rtnix.tuningMaxPriority - i)) + " $pid; done'") rtnix.tuningProcesses;
