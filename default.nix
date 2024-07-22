@@ -1,7 +1,6 @@
 { config, lib, pkgs, ... }:
 let 
   rtnix = config.rtnix;
-  pkgs_master = import /home/fps/src/nix/master/nixpkgs {};
 
   in
 {
@@ -43,7 +42,7 @@ let
       { domain = "@realtime"; item = "nofile" ; type = "hard"; value = "99999"    ; }
     ];
 
-    boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs_master.linuxPackages-rt_latest;
+    boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages-rt_latest;
 
     boot.kernelParams = lib.mkIf rtnix.disableCStates [ "processor.max_cstate=1" "idle=poll" ];
 
