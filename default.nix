@@ -63,7 +63,7 @@ let
     };
 
     environment.systemPackages = with pkgs; [ 
-      rt-tests
+      rt-tests config.boot.kernelPackages.perf
     ];
 
     systemd.services.powerManagementTuning = lib.mkIf rtnix.powerManagementTuning
