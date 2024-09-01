@@ -26,6 +26,16 @@ let
       default = [ ];
     };
 
+    setCpuDmaLatency = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+    };
+
+    disableBoost = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+    };
+
     powerManagementTuning = lib.mkOption {
       type = lib.types.bool;
       default = false;
@@ -66,6 +76,27 @@ let
       rt-tests
     ];
 
+    systemd.services.disableBoost = lib.mkIf rtnix.disableBoost {
+      enable = true;
+      description = "Disable processor boost";
+      wantedBy = [ "basic.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.bash}/bin/bash -c \"echo 0 > /sys/devices/system/cpu/cpufreq/boost\"";
+        User = "root";
+      };
+    };
+       
+    systemd.services.setCpuDmaLatency = lib.mkIf rtnix.setCpuDmaLatency {
+      enable = true;
+      description = "Set CPU DMA latency";
+      wantedBy = [ "basic.target" ];
+      serviceConfig = {
+        ExecStart = "${pkgs.bash}/bin/bash -c \"exec 3<> /dev/cpu_dma_latency; echo 0 >&3; while true; do sleep 1; done\"";
+        User = "root";
+      };
+    };
+ 
     systemd.services.powerManagementTuning = lib.mkIf rtnix.powerManagementTuning
       (let powerTuning = pkgs.writeShellScript "powerTuning.sh" ''
         ${pkgs.findutils}/bin/find /sys/devices/ -maxdepth 5 -path '*/pci*/power/control' -exec ${pkgs.bash}/bin/bash -c "echo tuning {}; echo on > {};" \;
