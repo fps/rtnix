@@ -15,6 +15,11 @@ let
       default = 90;
     };
 
+    intelPStatePassive = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+    };
+
     disableCStates = lib.mkOption {
       type = lib.types.bool;
       default = false;
@@ -32,6 +37,21 @@ let
     };
 
     disableBoost = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+    };
+
+    maxPerfPct = lib.mkOption {
+      type = lib.types.int;
+      default = 50;
+    };
+
+    minPerfPct = lib.mkOption {
+      type = lib.types.int;
+      default = 50;
+    };
+
+    setMinMaxPerfPct = lib.mkOption {
       type = lib.types.bool;
       default = false;
     };
@@ -54,11 +74,22 @@ let
 
     boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages-rt_latest;
 
-    boot.kernelParams = lib.mkIf rtnix.disableCStates [ "processor.max_cstate=1" "idle=poll" ];
+    boot.kernelParams = (lib.mkIf rtnix.disableCStates [ "processor.max_cstate=1" "idle=poll" ]) // (lib.mkIf rtnix.intelPStatePassive [ "intel_pstate=passive" ]);
 
     services.udev.extraRules = ''
       SUBSYSTEM=="sound", ACTION=="change", TAG+="systemd", ENV{SYSTEMD_WANTS}+="processPriorityTuning.service"
     '';
+
+    systemd.services.setMinMaxPerfPct = lib.mkIf rtnix.setMinMaxPerfPct {
+      enable = true;
+      description = "Set intel_pstate min and max_perf_pct";
+      wantedBy = [ "basic.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.bash}/bin/bash -c \"echo ${builtins.toString rtnix.minPerfPct} > /sys/devices/system/cpu/intel_pstate/min_perf_pct && echo ${builtins.toString rtnix.maxPerfPct} > /sys/devices/system/cpu/intel_pstate/max_perf_pct\"";
+        User = "root";
+      };
+    };
 
     systemd.services.processPriorityTuning = {
       enable = true;
