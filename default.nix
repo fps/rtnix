@@ -15,6 +15,11 @@ let
       default = 90;
     };
 
+    intelPStatePassive = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+    };
+
     disableCStates = lib.mkOption {
       type = lib.types.bool;
       default = false;
@@ -24,6 +29,31 @@ let
       type = lib.types.listOf lib.types.str;
       description = lib.mdDoc "A list of regex strings passed to pgrep to determine the PIDs of processes that are set to SCHED_FIFO with priorities tuningMaxPriority, tuningMaxPriority - 1, ...";
       default = [ ];
+    };
+
+    setCpuDmaLatency = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+    };
+
+    disableBoost = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+    };
+
+    maxPerfPct = lib.mkOption {
+      type = lib.types.int;
+      default = 50;
+    };
+
+    minPerfPct = lib.mkOption {
+      type = lib.types.int;
+      default = 50;
+    };
+
+    setMinMaxPerfPct = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
     };
 
     powerManagementTuning = lib.mkOption {
@@ -44,11 +74,22 @@ let
 
     boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages-rt_latest;
 
-    boot.kernelParams = lib.mkIf rtnix.disableCStates [ "processor.max_cstate=1" "idle=poll" ];
+    boot.kernelParams = (lib.mkIf rtnix.disableCStates [ "processor.max_cstate=1" "idle=poll" ]) // (lib.mkIf rtnix.intelPStatePassive [ "intel_pstate=passive" ]);
 
     services.udev.extraRules = ''
       SUBSYSTEM=="sound", ACTION=="change", TAG+="systemd", ENV{SYSTEMD_WANTS}+="processPriorityTuning.service"
     '';
+
+    systemd.services.setMinMaxPerfPct = lib.mkIf rtnix.setMinMaxPerfPct {
+      enable = true;
+      description = "Set intel_pstate min and max_perf_pct";
+      wantedBy = [ "basic.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.bash}/bin/bash -c \"echo ${builtins.toString rtnix.minPerfPct} > /sys/devices/system/cpu/intel_pstate/min_perf_pct && echo ${builtins.toString rtnix.maxPerfPct} > /sys/devices/system/cpu/intel_pstate/max_perf_pct\"";
+        User = "root";
+      };
+    };
 
     systemd.services.processPriorityTuning = {
       enable = true;
@@ -66,6 +107,27 @@ let
       rt-tests config.boot.kernelPackages.perf
     ];
 
+    systemd.services.disableBoost = lib.mkIf rtnix.disableBoost {
+      enable = true;
+      description = "Disable processor boost";
+      wantedBy = [ "basic.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStart = "${pkgs.bash}/bin/bash -c \"echo 0 > /sys/devices/system/cpu/cpufreq/boost\"";
+        User = "root";
+      };
+    };
+       
+    systemd.services.setCpuDmaLatency = lib.mkIf rtnix.setCpuDmaLatency {
+      enable = true;
+      description = "Set CPU DMA latency";
+      wantedBy = [ "basic.target" ];
+      serviceConfig = {
+        ExecStart = "${pkgs.bash}/bin/bash -c \"exec 3<> /dev/cpu_dma_latency; echo 0 >&3; while true; do sleep 1; done\"";
+        User = "root";
+      };
+    };
+ 
     systemd.services.powerManagementTuning = lib.mkIf rtnix.powerManagementTuning
       (let powerTuning = pkgs.writeShellScript "powerTuning.sh" ''
         ${pkgs.findutils}/bin/find /sys/devices/ -maxdepth 5 -path '*/pci*/power/control' -exec ${pkgs.bash}/bin/bash -c "echo tuning {}; echo on > {};" \;
