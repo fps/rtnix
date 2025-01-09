@@ -5,8 +5,7 @@ Take a look at the [source](default.nix)
 Check this repository out relative to your `configuration.nix`, add `./rtnix` to your `imports` and then add some configuration to your `configuration.nix`. For example:
 
 ```
-rtnix.enable = true;
-rtnix.kernel.realtime = true;
+rtnix.kernel.realtime.enable = true;
 rtnix.tuningProcesses = [ "irq/.*xhci" "irq/.*snd_intel_hda" ];
 ```
 
