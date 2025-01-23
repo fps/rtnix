@@ -75,7 +75,7 @@ let
     boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages-rt_latest;
 
     boot.kernelParams = lib.mkMerge [
-      (lib.mkIf rtnix.disableCStates [ "processor.max_cstate=1" "idle=poll" ]) 
+      (lib.mkIf rtnix.disableCStates [ "processor.max_cstate=0" "idle=poll" ]) 
       (lib.mkIf rtnix.intelPStatePassive [ "intel_pstate=passive" ])
     ];
 
