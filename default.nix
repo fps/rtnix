@@ -72,7 +72,7 @@ let
       { domain = "@realtime"; item = "nofile" ; type = "hard"; value = "99999"    ; }
     ];
 
-    boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages-rt_latest;
+    boot.kernelPackages = lib.mkIf rtnix.kernel.realtime.enable pkgs.linuxPackages-rt;
 
     boot.kernelParams = lib.mkMerge [
       (lib.mkIf rtnix.disableCStates [ "processor.max_cstate=0" "idle=poll" ]) 
@@ -107,7 +107,7 @@ let
     };
 
     environment.systemPackages = with pkgs; [ 
-      rt-tests config.boot.kernelPackages.perf
+      rt-tests perf
     ];
 
     systemd.services.disableBoost = lib.mkIf rtnix.disableBoost {
